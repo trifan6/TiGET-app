@@ -1,0 +1,33 @@
+# Node Modules (The heaviest folders, never push these)
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Environment Variables (Where your passwords live, never push these)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Testing and Coverage Reports (Generated automatically, don't push)
+coverage/
+frontend/coverage/
+backend/coverage/
+playwright-report/
+test-results/
+
+# Editor Settings (Your personal VS Code settings)
+.vscode/
+database/.vscode/
+frontend/.vscode/
+
+# Build and Cache Folders (Generated automatically)
+dist/
+build/
+.vite/
+.cache/
+
+# Mac OS System Files
+.DS_Store
+**/.DS_Store

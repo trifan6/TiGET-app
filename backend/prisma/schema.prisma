@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id             Int      @id @default(autoincrement())
+  name           String   
+  description    String?  
+  category       String?
+  lineup         String[] 
+  thumbnail      String?
+  gallery        String[]
+  date           String?
+  startTime      String?
+  duration       String?
+  location       String?
+  ageRestriction String?
+  price          Int?
+  capacity       Int?
+  sold           Int      @default(0)
+  organiserId    Int?
+  organiser      User?    @relation(fields: [organiserId], references: [id])
+  
+  reviews        Review[] 
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  author    String   
+  rating    Int
+  text      String   
+  eventId   Int
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  password  String   
+  
+  roleId    Int
+  role      Role     @relation(fields: [roleId], references: [id])
+  
+  events    Event[]  
+  
+  createdAt DateTime @default(now())
+
+  logs        Log[]
+  observation Observation?
+}
+
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique 
+  
+  users       User[]       
+  permissions Permission[] 
+
+    logs        Log[]
+
+}
+
+model Permission {
+  id    Int    @id @default(autoincrement())
+  name  String @unique 
+  
+  roles Role[] 
+}
+
+// --- THE LOGGING SYSTEM ---
+model Log {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  roleId    Int
+  action    String   // e.g., "PURCHASE_TICKET", "UNAUTHORIZED_ACCESS_ATTEMPT"
+  timestamp DateTime @default(now())
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id])
+  role      Role     @relation(fields: [roleId], references: [id])
+}
+
+// --- THE OBSERVATION LIST ---
+model Observation {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique
+  reason     String   // e.g., "Spamming endpoints", "Attempted Admin Access"
+  detectedAt DateTime @default(now())
+
+  // Relations
+  user       User     @relation(fields: [userId], references: [id])
+}
