@@ -62,7 +62,7 @@ TiGET is a event management and social platform. It implements a dual-database a
 │   └── tests/            # Playwright E2E tests
 └── docs/                 # Project documentation & Assignment specs
 
-
+```
 <img width="1470" height="847" alt="Screenshot 2026-05-09 at 20 18 44" src="https://github.com/user-attachments/assets/b412c142-1a84-4b17-af07-ac6c39a48df2" />
 <img width="1469" height="843" alt="Screenshot 2026-05-09 at 20 19 46" src="https://github.com/user-attachments/assets/28b388ee-a4b5-48b8-9522-6f3b6196ee2a" />
 <img width="1470" height="841" alt="Screenshot 2026-05-09 at 20 20 32" src="https://github.com/user-attachments/assets/8c0565d9-6649-4b06-ae27-30d5abf8bbf4" />
