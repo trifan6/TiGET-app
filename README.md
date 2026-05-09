@@ -1,3 +1,6 @@
+<img width="1470" height="847" alt="Screenshot 2026-05-09 at 20 18 44" src="https://github.com/user-attachments/assets/197e61fc-a380-48f8-b8a1-720884e92d41" />
+<img width="1469" height="843" alt="Screenshot 2026-05-09 at 20 19 46" src="https://github.com/user-attachments/assets/7bfc574d-1b25-43bc-b879-7ec8a5867808" />
+<img width="1470" height="841" alt="Screenshot 2026-05-09 at 20 20 32" src="https://github.com/user-attachments/assets/7f796863-0d8d-438a-b894-f4ec643dc67d" />
 # 🎫 TiGET | Full-Stack Event Ticketing System 
 
 TiGET is a event management and social platform. It implements a dual-database architecture to handle relational business logic alongside real-time social interactions.
