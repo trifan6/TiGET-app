@@ -163,10 +163,11 @@ async function startServer() {
     }),
   );
 
-  if (process.env.NODE_ENV !== "test") {
-    server.listen(PORT, () => {
-      console.log(`🚀 REST & WebSockets running on http://localhost:${PORT}`);
-      console.log(`🌌 GraphQL API running on http://localhost:${PORT}/graphql`);
+    if (process.env.NODE_ENV !== "test") {
+    server.listen(PORT, "0.0.0.0", () => { // "0.0.0.0" ensures it opens to the network
+      console.log(`🚀 REST & WebSockets running on Port ${PORT}`);
+      console.log(`🌌 GraphQL API running on Port ${PORT}/graphql`);
+      console.log(`📱 To connect your phone, use your Mac's Wi-Fi IP address!`);
     });
   }
 }

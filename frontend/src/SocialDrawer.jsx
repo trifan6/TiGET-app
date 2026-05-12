@@ -20,7 +20,7 @@ export default function SocialDrawer({ onClose, showToast }) {
     if (!currentUserId) return;
     try {
       const response = await fetch(
-        `http://localhost:3000/api/chat/recents/${currentUserId}`,
+        `${import.meta.env.VITE_API_URL}/api/chat/recents/${currentUserId}`,
       );
       const data = await response.json();
       setRecentUsers(data);
@@ -40,7 +40,7 @@ export default function SocialDrawer({ onClose, showToast }) {
   useEffect(() => {
     if (!currentUserId) return; 
 
-    const ws = new WebSocket("ws://localhost:3000");
+    const ws = new WebSocket(import.meta.env.VITE_WS_URL);
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -69,7 +69,7 @@ export default function SocialDrawer({ onClose, showToast }) {
     const fetchHistory = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3000/api/chat/${currentUserId}/${activeChatId}`,
+          `${import.meta.env.VITE_API_URL}/api/chat/${currentUserId}/${activeChatId}`,
         );
         const history = await response.json();
         setMessages(history);
@@ -95,7 +95,7 @@ export default function SocialDrawer({ onClose, showToast }) {
     if (q.trim().length > 0) {
       try {
         const response = await fetch(
-          `http://localhost:3000/api/chat/search?q=${q}`,
+          `${import.meta.env.VITE_API_URL}/api/chat/search?q=${q}`,
         );
         const data = await response.json();
         setSearchResults(

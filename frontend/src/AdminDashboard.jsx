@@ -24,7 +24,7 @@ export default function AdminDashboard({ onLogout }) {
   const handleViewSecurity = async () => {
     setCurrentView("security");
     try {
-      const response = await fetch("http://localhost:3000/graphql", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/graphql`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -82,7 +82,7 @@ export default function AdminDashboard({ onLogout }) {
           variables.organiserId = userId;
         }
 
-        const response = await fetch("http://localhost:3000/graphql", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/graphql`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -158,7 +158,7 @@ export default function AdminDashboard({ onLogout }) {
   const handleAddReview = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:3000/graphql", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/graphql`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -219,19 +219,19 @@ export default function AdminDashboard({ onLogout }) {
         try {
           if (item.action === "CREATE") {
             const { id, ...realPayload } = item.payload;
-            await fetch("http://localhost:3000/api/events", {
+            await fetch(`${import.meta.env.VITE_API_URL}/api/events`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(realPayload),
             });
           } else if (item.action === "UPDATE") {
-            await fetch(`http://localhost:3000/api/events/${item.payload.id}`, {
+            await fetch(`${import.meta.env.VITE_API_URL}/api/events/${item.payload.id}`, {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(item.payload),
             });
           } else if (item.action === "DELETE") {
-            await fetch(`http://localhost:3000/api/events/${item.payload.id}`, {
+            await fetch(`${import.meta.env.VITE_API_URL}/api/events/${item.payload.id}`, {
               method: "DELETE",
             });
           }
@@ -269,7 +269,7 @@ export default function AdminDashboard({ onLogout }) {
   }, []);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:3000");
+    const ws = new WebSocket(import.meta.env.VITE_WS_URL);
 
     ws.onopen = () => console.log("🟢 Connected to native WebSocket in Admin!");
 
@@ -320,7 +320,7 @@ export default function AdminDashboard({ onLogout }) {
 
   const startBot = async () => {
     try {
-      await fetch("http://localhost:3000/api/faker/start", { method: "POST" });
+      await fetch(`${import.meta.env.VITE_API_URL}/api/faker/start`, { method: "POST" });
       showToast("🤖 Faker Bot Activated!", "success");
     } catch (error) {
       console.error(error);
@@ -329,7 +329,7 @@ export default function AdminDashboard({ onLogout }) {
 
   const stopBot = async () => {
     try {
-      await fetch("http://localhost:3000/api/faker/stop", { method: "POST" });
+      await fetch(`${import.meta.env.VITE_API_URL}/api/faker/stop`, { method: "POST" });
       showToast("🛑 Faker Bot Deactivated.", "error");
     } catch (error) {
       console.error(error);
@@ -349,7 +349,7 @@ export default function AdminDashboard({ onLogout }) {
     }
 
     try {
-      await fetch("http://localhost:3000/graphql", {
+      await fetch(`${import.meta.env.VITE_API_URL}/graphql`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -482,7 +482,7 @@ export default function AdminDashboard({ onLogout }) {
       inputPayload.sold = parseInt(inputPayload.sold) || 0;
 
       if (formData.id) {
-        const response = await fetch("http://localhost:3000/graphql", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/graphql`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -505,7 +505,7 @@ export default function AdminDashboard({ onLogout }) {
           ),
         );
       } else {
-        const response = await fetch("http://localhost:3000/graphql", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/graphql`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

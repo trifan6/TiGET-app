@@ -138,7 +138,7 @@ function App() {
 
                     try {
                       const response = await fetch(
-                        "http://localhost:3000/graphql",
+                        `${import.meta.env.VITE_API_URL}/graphql`,
                         {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },

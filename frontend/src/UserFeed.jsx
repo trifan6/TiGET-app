@@ -29,7 +29,7 @@ export default function UserFeed({ onLogout }) {
   useEffect(() => {
     const fetchBackendEvents = async () => {
       try {
-        const response = await fetch("http://localhost:3000/graphql", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/graphql`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -71,7 +71,7 @@ export default function UserFeed({ onLogout }) {
   }, []);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:3000");
+    const ws = new WebSocket(import.meta.env.VITE_WS_URL);
 
     ws.onopen = () =>
       console.log("🟢 Connected to native WebSocket in User Feed!");
