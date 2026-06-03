@@ -29,7 +29,7 @@ app.use(express.json());
 app.use(cookieParser()); 
 
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server, path: "/tiget-ws" });
+const wss = new WebSocketServer({ server, path: "/tiget-ws" });
 
 const activeUsers = new Map();
 
