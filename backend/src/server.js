@@ -166,16 +166,10 @@ async function startServer() {
   );
 
   if (process.env.NODE_ENV !== "test") {
-    // We create a fake "dummy" certificate on the fly for the university lab
     const crypto = require('crypto');
     const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
     
-    // Fallback to standard HTTP if you ever remove the HTTPS requirement
     try {
-       // Note: In a real production app, you'd load real keys like fs.readFileSync('key.pem')
-       // For a local university demo, we will bypass strict certs by letting Express run standard HTTP 
-       // AND WE WILL RELY ON A CHROME SETTING FOR THE DEMO (See explanation below!)
-       const server = http.createServer(app);
        server.listen(PORT, "0.0.0.0", () => {
          console.log(`🚀 REST & WebSockets running on Port ${PORT}`);
          console.log(`🌌 GraphQL API running on Port ${PORT}/graphql`);
