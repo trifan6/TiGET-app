@@ -46,6 +46,7 @@ model User {
   email     String   @unique
   name      String
   password  String   
+  securityPin String?  // 🚀 ADD THIS LINE
   
   roleId    Int
   role      Role     @relation(fields: [roleId], references: [id])

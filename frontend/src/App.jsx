@@ -18,13 +18,89 @@ function App() {
   const [authView, setAuthView] = useState("menu");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [pin, setPin] = useState(""); // 🚀 Add this line
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // 🚀 SURGICAL ADDITION: The Backend Fetcher
+  const processAuth = async (actionType, targetRole = "CONSUMER") => {
+    // 1. Your exact existing frontend validation
+    if (!email || !password) {
+      alert("Error: Please fill out all required fields.");
+      return;
+    }
+    if (!emailRegex.test(email)) {
+      alert("Error: Please enter a valid email address.");
+      return;
+    }
+    if (password.length < 6) {
+      alert("Error: Password must be at least 6 characters.");
+      return;
+    }
+
+    try {
+      // 2. Setup the GraphQL query based on the button clicked
+      let query = "";
+      let variables = {};
+
+      if (actionType === "login") {
+        if (!pin) {
+          alert("Error: Please enter your 6-digit 3FA PIN.");
+          return;
+        }
+        // 🚀 Add pin to the GraphQL query
+        query = `mutation { login(email: "${email}", password: "${password}", pin: "${pin}") { token user { id email name role { name } } } }`;
+      } else {
+        // Name is required for register. If it's empty, use "User" as fallback to prevent crashes
+        const safeName = name || "User";
+        query = `mutation { register(email: "${email}", password: "${password}", name: "${safeName}", roleName: "${targetRole}") { token user { id email name role { name } } } }`;
+      }
+
+      // 3. Send to backend
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/graphql`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+
+      const result = await response.json();
+
+      // 4. Handle Server Errors (Wrong password, email taken, etc)
+      if (result.errors) {
+        alert(`Error: ${result.errors[0].message}`);
+        return;
+      }
+
+      // 5. Success! Save the tokens exactly as you had them, plus the new JWT
+      const data =
+        actionType === "login" ? result.data.login : result.data.register;
+
+      Cookies.set("auth_token", data.token, { expires: 2 / 24 }); // JWT expires in 2 hours
+      Cookies.set("user_id", data.user.id, { expires: 7 });
+      Cookies.set("user_role", data.user.role.name, { expires: 7 });
+      Cookies.set("user_email", data.user.email, { expires: 7 });
+      Cookies.set("is_logged_in", "true", { expires: 7 });
+
+      // 6. Route to correct screen
+      if (
+        data.user.role.name === "MASTER_ADMIN" ||
+        data.user.role.name === "ORGANISER"
+      ) {
+        setCurrentScreen("admin");
+      } else {
+        setCurrentScreen("user-feed");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error connecting to server.");
+    }
+  };
 
   const resetAuth = (targetScreen = "landing") => {
     setEmail("");
     setPassword("");
     setAuthView("menu");
+    setPin("");
 
     Cookies.remove("is_logged_in");
     Cookies.remove("user_email");
@@ -122,71 +198,21 @@ function App() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+
+                <input
+                  type="text"
+                  placeholder="6-Digit Auth Code"
+                  className="auth-input"
+                  maxLength="6"
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value)}
+                  style={{ border: "1px solid #E7462F" }}
+                />
                 <p className="forgot-password">forgot password?</p>
 
                 <button
                   className="btn-auth submit-btn"
-                  onClick={async () => {
-                    if (!email || !password) {
-                      alert("Error: Please enter your credentials.");
-                      return;
-                    }
-                    if (!emailRegex.test(email)) {
-                      alert("Error: Please enter a valid email address.");
-                      return;
-                    }
-
-                    try {
-                      const response = await fetch(
-                        `${import.meta.env.VITE_API_URL}/graphql`,
-                        {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            query: `
-                          mutation Login($email: String!, $password: String!) {
-                            login(email: $email, password: $password) {
-                              id
-                              email
-                              role {
-                                name
-                              }
-                            }
-                          }
-                        `,
-                            variables: { email, password },
-                          }),
-                        },
-                      );
-
-                      const result = await response.json();
-
-                      if (result.errors) {
-                        alert(result.errors[0].message);
-                        return;
-                      }
-
-                      const user = result.data.login;
-                      const userRole = user.role.name;
-
-                      Cookies.set("user_email", user.email, { expires: 7 });
-                      Cookies.set("user_role", userRole, { expires: 7 });
-                      Cookies.set("user_id", user.id, { expires: 7 });
-                      Cookies.set("is_logged_in", "true");
-
-                      if (
-                        userRole === "MASTER_ADMIN" ||
-                        userRole === "ORGANISER"
-                      ) {
-                        setCurrentScreen("admin");
-                      } else {
-                        setCurrentScreen("user-feed");
-                      }
-                    } catch (error) {
-                      console.error("Login error:", error);
-                      alert("Failed to connect to the server.");
-                    }
-                  }}
+                  onClick={() => processAuth("login")}
                 >
                   continue
                 </button>
@@ -237,30 +263,7 @@ function App() {
 
                 <button
                   className="btn-auth submit-btn"
-                  onClick={() => {
-                    if (!email || !password) {
-                      alert("Error: Please fill out all required fields.");
-                      return;
-                    }
-                    if (!emailRegex.test(email)) {
-                      alert("Error: Please enter a valid email address.");
-                      return;
-                    }
-                    if (password.length < 6) {
-                      alert("Error: Password must be at least 6 characters.");
-                      return;
-                    }
-
-                    Cookies.set("user_email", email, { expires: 7 });
-                    Cookies.set("is_logged_in", "true");
-                    alert("Registration successful! Logging you in...");
-
-                    if (email === "admin@tiget.com") {
-                      setCurrentScreen("admin");
-                    } else {
-                      setCurrentScreen("user-feed");
-                    }
-                  }}
+                  onClick={() => processAuth("register", "CONSUMER")}
                 >
                   create
                 </button>
@@ -306,28 +309,7 @@ function App() {
 
                 <button
                   className="btn-auth submit-btn"
-                  onClick={() => {
-                    if (!email || !password) {
-                      alert("Error: Please fill out all required fields.");
-                      return;
-                    }
-                    if (!emailRegex.test(email)) {
-                      alert("Error: Please enter a valid email address.");
-                      return;
-                    }
-                    if (password.length < 6) {
-                      alert("Error: Password must be at least 6 characters.");
-                      return;
-                    }
-
-                    Cookies.set("user_email", email, { expires: 7 });
-                    Cookies.set("is_logged_in", "true");
-                    alert(
-                      "Organiser Registration successful! Logging you in...",
-                    );
-
-                    setCurrentScreen("admin");
-                  }}
+                  onClick={() => processAuth("register", "ORGANISER")}
                 >
                   create
                 </button>

@@ -2,6 +2,8 @@ const { getEventById } = require("./controllers/eventController");
 const { events } = require("./data/store");
 const { logUserAction } = require("./utils/logger");
 const { prisma } = require("./utils/db");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const reviewsData = [];
 
@@ -88,12 +90,19 @@ const typeDefs = `#graphql
     role: Role
   }
 
+  type AuthPayload {
+    token: String!
+    user: User!
+  }
+
   type Mutation {
     createEvent(input: EventInput!): Event
     updateEvent(id: ID!, input: EventInput!): Event
     deleteEvent(id: ID!): Boolean
     addReview(eventId: ID!, author: String!, rating: Int!, text: String!): Review
-    login(email: String!, password: String!): User
+    login(email: String!, password: String!, pin: String!): AuthPayload
+    register(email: String!, password: String!, name: String!, roleName: String!): AuthPayload
+    changePassword(id: ID!, oldPassword: String!, newPassword: String!): Boolean
   }
 
   type Observation {
@@ -227,28 +236,108 @@ const resolvers = {
       return newReview;
     },
 
-    login: async (_, { email, password }) => {
+    register: async (_, { email, password, name, roleName }) => {
+      const existingUser = await prisma.user.findUnique({ where: { email } });
+      if (existingUser) {
+        throw new Error("Email is already registered.");
+      }
+
+      const role = await prisma.role.findUnique({ where: { name: roleName } });
+      if (!role) {
+        throw new Error("Invalid role specified.");
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const uniquePin = Math.floor(100000 + Math.random() * 900000).toString();
+
+      const newUser = await prisma.user.create({
+        data: {
+          email,
+          name,
+          password: hashedPassword,
+          roleId: role.id,
+          securityPin: uniquePin, // 🚀 2. Save it to DB
+        },
+        include: { role: true }
+      });
+
+      console.log(`\n=========================================`);
+      console.log(`🚨 3FA SECURITY PIN GENERATED FOR [${email}]`);
+      console.log(`👉 PIN CODE: ${uniquePin}`);
+      console.log(`=========================================\n`);
+
+      const token = jwt.sign(
+        { userId: newUser.id, role: newUser.role.name },
+        process.env.JWT_SECRET || "super-secret-key-for-tiget",
+        { expiresIn: "2h" }
+      );
+
+      await logUserAction(newUser.id, `USER_REGISTERED_AS_${roleName}`);
+      
+      return { token, user: newUser };
+    },
+
+    login: async (_, { email, password, pin }) => {
       const user = await prisma.user.findUnique({
         where: { email },
-        include: {
-          role: {
-            include: {
-              permissions: true,
-            },
-          },
-        },
+        include: { role: true },
       });
 
       if (!user) {
         throw new Error("Invalid email or user does not exist.");
       }
-      if (user.password !== password) {
-        throw new Error("Invalid password.");
+
+      const isValid = await bcrypt.compare(password, user.password);
+      if (!isValid) {
+        if (password !== user.password) {
+          throw new Error("Invalid password.");
+        }
       }
 
-      // We know exactly who logged in here, so we don't need cookies for this one!
+      if (user.securityPin && user.securityPin !== pin) {
+        throw new Error("Invalid 3FA Security PIN.");
+      }
+
+      const token = jwt.sign(
+        { userId: user.id, role: user.role.name },
+        process.env.JWT_SECRET || "super-secret-key-for-tiget",
+        { expiresIn: "2h" }
+      );
+
       await logUserAction(user.id, "USER_LOGIN");
-      return user;
+      return { token, user };
+    },
+
+    changePassword: async (_, { id, oldPassword, newPassword }) => {
+      // 1. Find the user
+      const user = await prisma.user.findUnique({ where: { id: parseInt(id) } });
+      if (!user) {
+        throw new Error("User not found.");
+      }
+
+      // 2. Verify the old password (Factor 1 of 3-Way Auth)
+      const isValid = await bcrypt.compare(oldPassword, user.password);
+      if (!isValid) {
+        // Fallback for your seeded users who still have plain-text passwords
+        if (oldPassword !== user.password) {
+          throw new Error("Incorrect current password.");
+        }
+      }
+
+      // 3. Hash the new password securely
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+      // 4. Save to database
+      await prisma.user.update({
+        where: { id: parseInt(id) },
+        data: { password: hashedNewPassword }
+      });
+
+      // 5. Log the security event
+      await logUserAction(id, "PASSWORD_CHANGED_SECURELY");
+      
+      return true;
     },
   },
 };

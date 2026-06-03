@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Cookies from "js-cookie";
+import ManageAccount from "./ManageAccount";
 
 const CHART_COLORS = [
   "#E7462F",
@@ -17,8 +18,9 @@ export default function AdminDashboard({ onLogout }) {
   const [hasMore, setHasMore] = useState(true);
   const [prefetchedData, setPrefetchedData] = useState([]);
   const eventsPerPage = 5;
+  const [activeTab, setActiveTab] = useState(null);
 
-    const [observations, setObservations] = useState([]);
+  const [observations, setObservations] = useState([]);
   const userRole = Cookies.get("user_role");
 
   const handleViewSecurity = async () => {
@@ -40,8 +42,8 @@ export default function AdminDashboard({ onLogout }) {
                 }
               }
             }
-          `
-        })
+          `,
+        }),
       });
       const result = await response.json();
       setObservations(result.data.getObservations || []);
@@ -82,11 +84,13 @@ export default function AdminDashboard({ onLogout }) {
           variables.organiserId = userId;
         }
 
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/graphql`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: `
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/graphql`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              query: `
               query GetEvents($page: Int, $limit: Int, $organiserId: ID) {
                 getEvents(page: $page, limit: $limit, organiserId: $organiserId) {
                   data {
@@ -96,9 +100,10 @@ export default function AdminDashboard({ onLogout }) {
                 }
               }
             `,
-            variables: variables,
-          }),
-        });
+              variables: variables,
+            }),
+          },
+        );
         const result = await response.json();
         return result.data.getEvents;
       };
@@ -225,15 +230,21 @@ export default function AdminDashboard({ onLogout }) {
               body: JSON.stringify(realPayload),
             });
           } else if (item.action === "UPDATE") {
-            await fetch(`${import.meta.env.VITE_API_URL}/api/events/${item.payload.id}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(item.payload),
-            });
+            await fetch(
+              `${import.meta.env.VITE_API_URL}/api/events/${item.payload.id}`,
+              {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(item.payload),
+              },
+            );
           } else if (item.action === "DELETE") {
-            await fetch(`${import.meta.env.VITE_API_URL}/api/events/${item.payload.id}`, {
-              method: "DELETE",
-            });
+            await fetch(
+              `${import.meta.env.VITE_API_URL}/api/events/${item.payload.id}`,
+              {
+                method: "DELETE",
+              },
+            );
           }
         } catch (error) {
           console.error("Sync error:", error);
@@ -320,7 +331,9 @@ export default function AdminDashboard({ onLogout }) {
 
   const startBot = async () => {
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/faker/start`, { method: "POST" });
+      await fetch(`${import.meta.env.VITE_API_URL}/api/faker/start`, {
+        method: "POST",
+      });
       showToast("🤖 Faker Bot Activated!", "success");
     } catch (error) {
       console.error(error);
@@ -329,7 +342,9 @@ export default function AdminDashboard({ onLogout }) {
 
   const stopBot = async () => {
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/faker/stop`, { method: "POST" });
+      await fetch(`${import.meta.env.VITE_API_URL}/api/faker/stop`, {
+        method: "POST",
+      });
       showToast("🛑 Faker Bot Deactivated.", "error");
     } catch (error) {
       console.error(error);
@@ -482,20 +497,23 @@ export default function AdminDashboard({ onLogout }) {
       inputPayload.sold = parseInt(inputPayload.sold) || 0;
 
       if (formData.id) {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/graphql`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: `
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/graphql`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              query: `
               mutation UpdateEvent($id: ID!, $input: EventInput!) {
                 updateEvent(id: $id, input: $input) {
                   id name description category lineup thumbnail gallery date startTime duration location ageRestriction price capacity sold
                 }
               }
             `,
-            variables: { id: formData.id, input: inputPayload },
-          }),
-        });
+              variables: { id: formData.id, input: inputPayload },
+            }),
+          },
+        );
         const result = await response.json();
 
         if (result.errors) throw new Error(result.errors[0].message);
@@ -505,24 +523,27 @@ export default function AdminDashboard({ onLogout }) {
           ),
         );
       } else {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/graphql`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: `
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/graphql`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              query: `
               mutation CreateEvent($input: EventInput!) {
                 createEvent(input: $input) {
                   id name description category lineup thumbnail gallery date startTime duration location ageRestriction price capacity sold
                 }
               }
             `,
-            variables: { input: inputPayload },
-          }),
-        });
+              variables: { input: inputPayload },
+            }),
+          },
+        );
         const result = await response.json();
 
         if (result.errors) throw new Error(result.errors[0].message);
-        setEvents([result.data.createEvent, ...events]); 
+        setEvents([result.data.createEvent, ...events]);
       }
 
       Cookies.set("last_modified_event", formData.name, { expires: 7 });
@@ -542,20 +563,47 @@ export default function AdminDashboard({ onLogout }) {
           <img src="/logo.png" alt="TiGET Logo" />
         </div>
         <div className="nav-links">
-          <span onClick={() => setCurrentView("table")} style={{ cursor: "pointer", color: currentView === "table" ? "#E7462F" : "" }}>HOME</span>
+          <span
+            onClick={() => setCurrentView("table")}
+            style={{
+              cursor: "pointer",
+              color: currentView === "table" ? "#E7462F" : "",
+            }}
+          >
+            HOME
+          </span>
           <span>SEARCH</span>
           <span>YOUR EVENTS</span>
           {userRole === "MASTER_ADMIN" && (
-            <span 
-              onClick={handleViewSecurity} 
-              style={{ cursor: "pointer", color: currentView === "security" ? "#E7462F" : "" }}
+            <span
+              onClick={handleViewSecurity}
+              style={{
+                cursor: "pointer",
+                color: currentView === "security" ? "#E7462F" : "",
+              }}
             >
               SECUR<span className="keep-i">i</span>TY LOGS
             </span>
           )}
-          <span onClick={onLogout} style={{ cursor: "pointer" }}>
-            ACCOUNT (LOGOUT)
-          </span>
+          <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+            <span
+              onClick={() =>
+                setActiveTab(activeTab === "account" ? null : "account")
+              }
+              style={{ cursor: "pointer" }}
+            >
+              ACCOUNT
+            </span>
+            
+            {activeTab === "account" && (
+              <div style={{ cursor: "default" }}>
+                <ManageAccount
+                  onClose={() => setActiveTab(null)}
+                  onLogout={onLogout}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 
@@ -592,12 +640,29 @@ export default function AdminDashboard({ onLogout }) {
         </span>
       </div>
 
-            {currentView === "security" ? (
-        <div className="crud-form-container" style={{ maxWidth: "1000px", width: "100%" }}>
+      {currentView === "security" ? (
+        <div
+          className="crud-form-container"
+          style={{ maxWidth: "1000px", width: "100%" }}
+        >
           <div className="compact-form-card" style={{ maxWidth: "100%" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-               <h2 style={{ color: "#E7462F", margin: 0 }}>🚨 Security Observation List</h2>
-               <button className="btn-compact secondary" onClick={() => setCurrentView("table")}>← Back to Dashboard</button>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
+              }}
+            >
+              <h2 style={{ color: "#E7462F", margin: 0 }}>
+                🚨 Security Observation List
+              </h2>
+              <button
+                className="btn-compact secondary"
+                onClick={() => setCurrentView("table")}
+              >
+                ← Back to Dashboard
+              </button>
             </div>
             <table className="pro-table">
               <thead>
@@ -609,15 +674,32 @@ export default function AdminDashboard({ onLogout }) {
                 </tr>
               </thead>
               <tbody>
-                {observations.length > 0 ? observations.map(obs => (
-                  <tr key={obs.id}>
-                    <td style={{ color: "#888" }}>{obs.userId}</td>
-                    <td style={{ fontWeight: "bold", color: "#fff" }}>{obs.user?.name || "Unknown"}</td>
-                    <td style={{ color: "#E7462F" }}>{obs.reason}</td>
-                    <td style={{ color: "#aaa" }}>{new Date(Number(obs.detectedAt)).toLocaleString()}</td>
+                {observations.length > 0 ? (
+                  observations.map((obs) => (
+                    <tr key={obs.id}>
+                      <td style={{ color: "#888" }}>{obs.userId}</td>
+                      <td style={{ fontWeight: "bold", color: "#fff" }}>
+                        {obs.user?.name || "Unknown"}
+                      </td>
+                      <td style={{ color: "#E7462F" }}>{obs.reason}</td>
+                      <td style={{ color: "#aaa" }}>
+                        {new Date(Number(obs.detectedAt)).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="4"
+                      style={{
+                        textAlign: "center",
+                        color: "#888",
+                        padding: "20px",
+                      }}
+                    >
+                      No security threats detected.
+                    </td>
                   </tr>
-                )) : (
-                  <tr><td colSpan="4" style={{ textAlign: "center", color: "#888", padding: "20px" }}>No security threats detected.</td></tr>
                 )}
               </tbody>
             </table>

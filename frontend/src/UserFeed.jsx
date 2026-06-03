@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import SocialDrawer from "./SocialDrawer";
+import ManageAccount from "./ManageAccount";
 
 export default function UserFeed({ onLogout }) {
   const [view, setView] = useState("feed");
@@ -13,7 +14,7 @@ export default function UserFeed({ onLogout }) {
 
   const [toast, setToast] = useState(null);
 
-  const [activeTab, setActiveTab] = useState(null); 
+  const [activeTab, setActiveTab] = useState(null);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -29,11 +30,13 @@ export default function UserFeed({ onLogout }) {
   useEffect(() => {
     const fetchBackendEvents = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/graphql`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: `
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/graphql`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              query: `
               query {
                 getEvents(limit: 100) {
                   data {
@@ -56,8 +59,9 @@ export default function UserFeed({ onLogout }) {
                 }
               }
             `,
-          }),
-        });
+            }),
+          },
+        );
 
         const result = await response.json();
         if (result.data && result.data.getEvents) {
@@ -175,7 +179,9 @@ export default function UserFeed({ onLogout }) {
           </span>
 
           <span
-            onClick={onLogout}
+            onClick={() =>
+              setActiveTab(activeTab === "account" ? null : "account")
+            }
             className="nav-clickable"
             style={{ position: "relative", zIndex: 10 }}
           >
@@ -186,26 +192,32 @@ export default function UserFeed({ onLogout }) {
             <div
               style={{
                 position: "absolute",
-                top: "-20px", 
-                right: "-43px", 
-                width: "480px", 
-                height: "800px", 
-                backgroundColor: "rgba(21, 21, 27, 0.65)", 
-                backdropFilter: "blur(16px)", 
+                top: "-20px",
+                right: "-43px",
+                width: "480px",
+                height: "800px",
+                backgroundColor: "rgba(21, 21, 27, 0.65)",
+                backdropFilter: "blur(16px)",
                 WebkitBackdropFilter: "blur(16px)",
                 borderRadius: "30px",
                 boxShadow: "0 30px 60px rgba(0,0,0,0.6)",
-                zIndex: 5, 
+                zIndex: 5,
                 display: "flex",
                 flexDirection: "column",
-                paddingTop: "60px", 
-                overflow: "hidden", 
+                paddingTop: "60px",
+                overflow: "hidden",
               }}
             >
               {activeTab === "friends" && (
                 <SocialDrawer
                   onClose={() => setActiveTab(null)}
                   showToast={showToast}
+                />
+              )}
+              {activeTab === "account" && (
+                <ManageAccount
+                  onClose={() => setActiveTab(null)}
+                  onLogout={onLogout}
                 />
               )}
             </div>
