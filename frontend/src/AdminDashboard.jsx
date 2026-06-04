@@ -562,48 +562,90 @@ export default function AdminDashboard({ onLogout }) {
         <div className="nav-logo">
           <img src="/logo.png" alt="TiGET Logo" />
         </div>
-        <div className="nav-links">
+        
+        <div 
+          className="nav-links"
+          style={{
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
           <span
-            onClick={() => setCurrentView("table")}
+            onClick={() => {
+              setCurrentView("table");
+              setActiveTab(null);
+            }}
             style={{
+              position: "relative",
+              zIndex: 10,
               cursor: "pointer",
-              color: currentView === "table" ? "#E7462F" : "",
+              color: currentView === "table" && activeTab === null ? "#E7462F" : "",
             }}
           >
             HOME
           </span>
-          <span>SEARCH</span>
-          <span>YOUR EVENTS</span>
+          <span style={{ position: "relative", zIndex: 10 }}>SEARCH</span>
+          <span style={{ position: "relative", zIndex: 10 }}>YOUR EVENTS</span>
+          
           {userRole === "MASTER_ADMIN" && (
             <span
-              onClick={handleViewSecurity}
+              onClick={() => {
+                handleViewSecurity();
+                setActiveTab(null);
+              }}
               style={{
+                position: "relative",
+                zIndex: 10,
                 cursor: "pointer",
-                color: currentView === "security" ? "#E7462F" : "",
+                color: currentView === "security" && activeTab === null ? "#E7462F" : "",
               }}
             >
               SECUR<span className="keep-i">i</span>TY LOGS
             </span>
           )}
-          <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-            <span
-              onClick={() =>
-                setActiveTab(activeTab === "account" ? null : "account")
-              }
-              style={{ cursor: "pointer" }}
-            >
-              ACCOUNT
-            </span>
+          
+          <span
+            onClick={() =>
+              setActiveTab(activeTab === "account" ? null : "account")
+            }
+            style={{ 
+              position: "relative", 
+              zIndex: 10,
+              cursor: "pointer",
+              color: activeTab === "account" ? "#E7462F" : "",
+            }}
+          >
+            ACCOUNT
+          </span>
             
-            {activeTab === "account" && (
-              <div style={{ cursor: "default" }}>
-                <ManageAccount
-                  onClose={() => setActiveTab(null)}
-                  onLogout={onLogout}
-                />
-              </div>
-            )}
-          </div>
+          {activeTab === "account" && (
+            <div
+              style={{
+                position: "absolute",
+                top: "-20px",
+                right: "-43px",
+                width: "480px",
+                height: "800px",
+                backgroundColor: "rgba(21, 21, 27, 0.65)",
+                backdropFilter: "blur(16px)",
+                WebkitBackdropFilter: "blur(16px)",
+                borderRadius: "30px",
+                boxShadow: "0 30px 60px rgba(0,0,0,0.6)",
+                zIndex: 5,
+                display: "flex",
+                flexDirection: "column",
+                paddingTop: "60px",
+                overflow: "hidden",
+                cursor: "default"
+              }}
+            >
+              <ManageAccount
+                onClose={() => setActiveTab(null)}
+                onLogout={onLogout}
+              />
+            </div>
+          )}
         </div>
       </nav>
 
