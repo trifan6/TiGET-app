@@ -18,13 +18,15 @@ function App() {
   const [authView, setAuthView] = useState("menu");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [pin, setPin] = useState(""); // 🚀 Add this line
+  const [pin, setPin] = useState(""); 
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState(""); 
+  const [orgName, setOrgName] = useState(""); 
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  // 🚀 SURGICAL ADDITION: The Backend Fetcher
   const processAuth = async (actionType, targetRole = "CONSUMER") => {
-    // 1. Your exact existing frontend validation
     if (!email || !password) {
       alert("Error: Please fill out all required fields.");
       return;
@@ -39,7 +41,6 @@ function App() {
     }
 
     try {
-      // 2. Setup the GraphQL query based on the button clicked
       let query = "";
       let variables = {};
 
@@ -48,15 +49,23 @@ function App() {
           alert("Error: Please enter your 6-digit 3FA PIN.");
           return;
         }
-        // 🚀 Add pin to the GraphQL query
         query = `mutation { login(email: "${email}", password: "${password}", pin: "${pin}") { token user { id email name role { name } } } }`;
       } else {
-        // Name is required for register. If it's empty, use "User" as fallback to prevent crashes
-        const safeName = name || "User";
-        query = `mutation { register(email: "${email}", password: "${password}", name: "${safeName}", roleName: "${targetRole}") { token user { id email name role { name } } } }`;
+        if (targetRole === "ORGANISER") {
+          const safeOrg = orgName.trim() || "Unknown Organisation";
+          query = `mutation { register(email: "${email}", password: "${password}", name: "${safeOrg}", roleName: "${targetRole}") { token user { id email name role { name } } } }`;
+        } else {
+          query = `mutation { register(
+            email: "${email}", 
+            password: "${password}", 
+            firstName: "${firstName.trim()}", 
+            lastName: "${lastName.trim()}", 
+            username: "${username.trim()}", 
+            roleName: "${targetRole}"
+          ) { token user { id email name role { name } } } }`;
+        }
       }
 
-      // 3. Send to backend
       const response = await fetch(`${import.meta.env.VITE_API_URL}/graphql`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -65,23 +74,20 @@ function App() {
 
       const result = await response.json();
 
-      // 4. Handle Server Errors (Wrong password, email taken, etc)
       if (result.errors) {
         alert(`Error: ${result.errors[0].message}`);
         return;
       }
 
-      // 5. Success! Save the tokens exactly as you had them, plus the new JWT
       const data =
         actionType === "login" ? result.data.login : result.data.register;
 
-      Cookies.set("auth_token", data.token, { expires: 2 / 24 }); // JWT expires in 2 hours
+      Cookies.set("auth_token", data.token, { expires: 2 / 24 }); 
       Cookies.set("user_id", data.user.id, { expires: 7 });
       Cookies.set("user_role", data.user.role.name, { expires: 7 });
       Cookies.set("user_email", data.user.email, { expires: 7 });
       Cookies.set("is_logged_in", "true", { expires: 7 });
 
-      // 6. Route to correct screen
       if (
         data.user.role.name === "MASTER_ADMIN" ||
         data.user.role.name === "ORGANISER"
@@ -99,8 +105,12 @@ function App() {
   const resetAuth = (targetScreen = "landing") => {
     setEmail("");
     setPassword("");
-    setAuthView("menu");
     setPin("");
+    setFirstName("");
+    setLastName("");
+    setUsername("");
+    setOrgName("");
+    setAuthView("menu");
 
     Cookies.remove("is_logged_in");
     Cookies.remove("user_email");
@@ -242,16 +252,22 @@ function App() {
                   type="text"
                   placeholder="username"
                   className="auth-input"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
                 <input
                   type="text"
                   placeholder="first name"
                   className="auth-input"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
                 />
                 <input
                   type="text"
                   placeholder="last name"
                   className="auth-input"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
                 />
                 <input
                   type="password"
@@ -293,6 +309,8 @@ function App() {
                   type="text"
                   placeholder="organisation"
                   className="auth-input"
+                  value={orgName}
+                  onChange={(e) => setOrgName(e.target.value)}
                 />
                 <input
                   type="text"

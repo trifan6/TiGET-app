@@ -25,7 +25,6 @@ model Event {
   sold           Int      @default(0)
   organiserId    Int?
   organiser      User?    @relation(fields: [organiserId], references: [id])
-  
   reviews        Review[] 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -44,59 +43,48 @@ model Review {
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
-  name      String
+  name      String?  
+  firstName String?
+  lastName  String?
+  username  String?  @unique
   password  String   
-  securityPin String?  // 🚀 ADD THIS LINE
-  
+  securityPin String?  
   roleId    Int
   role      Role     @relation(fields: [roleId], references: [id])
-  
   events    Event[]  
-  
   createdAt DateTime @default(now())
-
   logs        Log[]
   observation Observation?
 }
 
 model Role {
   id          Int          @id @default(autoincrement())
-  name        String       @unique 
-  
+  name        String       @unique   
   users       User[]       
   permissions Permission[] 
-
-    logs        Log[]
-
+  logs        Log[]
 }
 
 model Permission {
   id    Int    @id @default(autoincrement())
   name  String @unique 
-  
   roles Role[] 
 }
 
-// --- THE LOGGING SYSTEM ---
 model Log {
   id        Int      @id @default(autoincrement())
   userId    Int
   roleId    Int
-  action    String   // e.g., "PURCHASE_TICKET", "UNAUTHORIZED_ACCESS_ATTEMPT"
+  action    String   
   timestamp DateTime @default(now())
-
-  // Relations
   user      User     @relation(fields: [userId], references: [id])
   role      Role     @relation(fields: [roleId], references: [id])
 }
 
-// --- THE OBSERVATION LIST ---
 model Observation {
   id         Int      @id @default(autoincrement())
   userId     Int      @unique
-  reason     String   // e.g., "Spamming endpoints", "Attempted Admin Access"
+  reason     String   
   detectedAt DateTime @default(now())
-
-  // Relations
   user       User     @relation(fields: [userId], references: [id])
 }

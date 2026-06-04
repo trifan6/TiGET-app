@@ -86,7 +86,10 @@ const typeDefs = `#graphql
   type User {
     id: ID!
     email: String!
-    name: String!
+    name: String       
+    firstName: String
+    lastName: String
+    username: String
     role: Role
   }
 
@@ -101,7 +104,15 @@ const typeDefs = `#graphql
     deleteEvent(id: ID!): Boolean
     addReview(eventId: ID!, author: String!, rating: Int!, text: String!): Review
     login(email: String!, password: String!, pin: String!): AuthPayload
-    register(email: String!, password: String!, name: String!, roleName: String!): AuthPayload
+    register(
+      email: String!, 
+      password: String!, 
+      name: String,       
+      firstName: String,  
+      lastName: String,   
+      username: String,   
+      roleName: String!
+    ): AuthPayload    
     changePassword(id: ID!, oldPassword: String!, newPassword: String!): Boolean
   }
 
@@ -254,12 +265,14 @@ const resolvers = {
       const newUser = await prisma.user.create({
         data: {
           email,
-          name,
           password: hashedPassword,
-          roleId: role.id,
-          securityPin: uniquePin, // 🚀 2. Save it to DB
+          name: args.name || null,
+          firstName: args.firstName || null,
+          lastName: args.lastName || null,
+          username: args.username || null,
+          roleId: roleRecord.id,
         },
-        include: { role: true }
+        include: { role: true },
       });
 
       console.log(`\n=========================================`);
@@ -340,6 +353,19 @@ const resolvers = {
       return true;
     },
   },
+
+  User: {
+    name: (parent) => {
+      if (parent.firstName || parent.lastName) {
+        return `${parent.firstName || ''} ${parent.lastName || ''}`.trim();
+      }
+      if (parent.name) return parent.name;
+      
+      if (parent.username) return parent.username;
+      
+      return "Unknown User";
+    }
+  }
 };
 
 module.exports = { typeDefs, resolvers };
