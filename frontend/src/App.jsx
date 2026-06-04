@@ -44,11 +44,12 @@ function App() {
       let query = "";
       let variables = {};
 
-      if (actionType === "login") {
+     if (actionType === "login") {
         if (!pin) {
           alert("Error: Please enter your 6-digit 3FA PIN.");
           return;
         }
+        // 🚀 Put the PIN back in the query
         query = `mutation { login(email: "${email}", password: "${password}", pin: "${pin}") { token user { id email name role { name } } } }`;
       } else {
         if (targetRole === "ORGANISER") {
@@ -208,7 +209,7 @@ function App() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-
+              
                 <input
                   type="text"
                   placeholder="6-Digit Auth Code"

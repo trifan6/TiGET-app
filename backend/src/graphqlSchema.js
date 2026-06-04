@@ -250,17 +250,12 @@ const resolvers = {
 
     register: async (_, { email, password, name, firstName, lastName, username, roleName }) => {
       const existingUser = await prisma.user.findUnique({ where: { email } });
-      if (existingUser) {
-        throw new Error("Email is already registered.");
-      }
+      if (existingUser) throw new Error("Email is already registered.");
 
       const role = await prisma.role.findUnique({ where: { name: roleName } });
-      if (!role) {
-        throw new Error("Invalid role specified.");
-      }
+      if (!role) throw new Error("Invalid role specified.");
 
       const hashedPassword = await bcrypt.hash(password, 10);
-
       const uniquePin = Math.floor(100000 + Math.random() * 900000).toString();
 
       const newUser = await prisma.user.create({
@@ -271,18 +266,17 @@ const resolvers = {
           firstName: firstName || null,
           lastName: lastName || null,
           username: username || null,
-          roleId: role.id,  
-          securityPin: uniquePin    
+          roleId: role.id,
+          securityPin: uniquePin    // 🚀 We are saving the PIN!
         },
         include: { role: true },
       });
 
+      // 🚀 We print it so you can read it during the demo! NO EMAIL CALL HERE.
       console.log(`\n=========================================`);
       console.log(`🚨 3FA SECURITY PIN GENERATED FOR [${email}]`);
       console.log(`👉 PIN CODE: ${uniquePin}`);
       console.log(`=========================================\n`);
-
-      await sendPinEmail(email, uniquePin);
 
       const token = jwt.sign(
         { userId: newUser.id, role: newUser.role.name },
@@ -291,7 +285,6 @@ const resolvers = {
       );
 
       await logUserAction(newUser.id, `USER_REGISTERED_AS_${roleName}`);
-      
       return { token, user: newUser };
     },
 
@@ -301,17 +294,14 @@ const resolvers = {
         include: { role: true },
       });
 
-      if (!user) {
-        throw new Error("Invalid email or user does not exist.");
-      }
+      if (!user) throw new Error("Invalid email or user does not exist.");
 
       const isValid = await bcrypt.compare(password, user.password);
-      if (!isValid) {
-        if (password !== user.password) {
-          throw new Error("Invalid password.");
-        }
+      if (!isValid && password !== user.password) {
+        throw new Error("Invalid password.");
       }
 
+      // 🚀 RESTORED: Check if the PIN matches!
       if (user.securityPin && user.securityPin !== pin) {
         throw new Error("Invalid 3FA Security PIN.");
       }
