@@ -27,7 +27,8 @@ const sendPinEmail = async (toEmail, pin) => {
     });
     console.log(`📧 SUCCESS: Email sent to ${toEmail}`);
   } catch (error) {
-    console.error(`🔴 FAILED to send email to ${toEmail}. They probably used a fake email.`);
+    // Now it will print the EXACT reason Google rejected it!
+    console.error(`🔴 FAILED to send email to ${toEmail}. Reason:`, error);
   }
 };
 
