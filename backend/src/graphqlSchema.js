@@ -4,6 +4,7 @@ const { logUserAction } = require("./utils/logger");
 const { prisma } = require("./utils/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { sendPinEmail } = require("./utils/mailer");
 
 const reviewsData = [];
 
@@ -270,8 +271,8 @@ const resolvers = {
           firstName: firstName || null,
           lastName: lastName || null,
           username: username || null,
-          roleId: role.id,  // Fixed! It was trying to use roleRecord.id
-          securityPin: uniquePin    // Ensuring the PIN actually saves to the database!
+          roleId: role.id,  
+          securityPin: uniquePin    
         },
         include: { role: true },
       });
@@ -280,6 +281,8 @@ const resolvers = {
       console.log(`🚨 3FA SECURITY PIN GENERATED FOR [${email}]`);
       console.log(`👉 PIN CODE: ${uniquePin}`);
       console.log(`=========================================\n`);
+
+      await sendPinEmail(email, uniquePin);
 
       const token = jwt.sign(
         { userId: newUser.id, role: newUser.role.name },
