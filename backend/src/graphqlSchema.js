@@ -247,7 +247,7 @@ const resolvers = {
       return newReview;
     },
 
-    register: async (_, { email, password, name, roleName }) => {
+    register: async (_, { email, password, name, firstName, lastName, username, roleName }) => {
       const existingUser = await prisma.user.findUnique({ where: { email } });
       if (existingUser) {
         throw new Error("Email is already registered.");
@@ -266,11 +266,12 @@ const resolvers = {
         data: {
           email,
           password: hashedPassword,
-          name: args.name || null,
-          firstName: args.firstName || null,
-          lastName: args.lastName || null,
-          username: args.username || null,
-          roleId: roleRecord.id,
+          name: name || null,
+          firstName: firstName || null,
+          lastName: lastName || null,
+          username: username || null,
+          roleId: role.id,  // Fixed! It was trying to use roleRecord.id
+          pin: uniquePin    // Ensuring the PIN actually saves to the database!
         },
         include: { role: true },
       });
