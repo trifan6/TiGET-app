@@ -625,7 +625,7 @@ export default function AdminDashboard({ onLogout }) {
                 position: "absolute",
                 top: "-20px",
                 right: "-43px",
-                width: "615px",
+                width: userRole === "MASTER_ADMIN" ? "615px" : "471px",
                 height: "800px",
                 backgroundColor: "rgba(21, 21, 27, 0.65)",
                 backdropFilter: "blur(16px)",
