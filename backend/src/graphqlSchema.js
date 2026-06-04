@@ -271,7 +271,7 @@ const resolvers = {
           lastName: lastName || null,
           username: username || null,
           roleId: role.id,  // Fixed! It was trying to use roleRecord.id
-          pin: uniquePin    // Ensuring the PIN actually saves to the database!
+          securityPin: uniquePin    // Ensuring the PIN actually saves to the database!
         },
         include: { role: true },
       });
